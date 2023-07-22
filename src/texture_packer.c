@@ -1,21 +1,21 @@
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-int convert_dr(const char *diffuse_path, const char *roughness_path, const char *outpath)
+int convert_ar(const char *albedo_path, const char *roughness_path, const char *outpath)
 {
-    int diffuse_width, diffuse_height, diffuse_channels;
-    unsigned char *diffuse = stbi_load(diffuse_path, &diffuse_width, &diffuse_height, &diffuse_channels, 0);
+    int albedo_width, albedo_height, albedo_channels;
+    unsigned char *albedo = stbi_load(albedo_path, &albedo_width, &albedo_height, &albedo_channels, 0);
 
-    if (!diffuse)
+    if (!albedo)
     {
-        printf("Error: Failed to load %s\n", diffuse_path);
+        printf("Error: Failed to load %s\n", albedo_path);
         return 1;
     }
-    else if (diffuse_channels != 3)
+    else if (albedo_channels != 3)
     {
-        printf("Error: %s needs to be a 3-channel RGB image.\n", diffuse_path);
+        printf("Error: %s needs to be a 3-channel RGB image.\n", albedo_path);
         return 1;
     }
 
@@ -33,43 +33,29 @@ int convert_dr(const char *diffuse_path, const char *roughness_path, const char 
         return 1;
     }
 
-    if (diffuse_width != roughness_width || diffuse_height != roughness_height)
+    if (albedo_width != roughness_width || albedo_height != roughness_height)
     {
-        printf("Error: %s and %s need to have the same dimensions.\n", diffuse_path, roughness_path);
+        printf("Error: %s and %s need to have the same dimensions.\n", albedo_path, roughness_path);
         return 1;
     }
 
-    unsigned char *dr = (unsigned char *)calloc(diffuse_width * diffuse_height, 4);
-    for (int i = 0; i < diffuse_width * diffuse_height; i++)
+    unsigned char *ar = (unsigned char *)calloc(albedo_width * albedo_height, 4);
+    for (int i = 0; i < albedo_width * albedo_height; i++)
     {
-        dr[i * 4 + 0] = diffuse[i * 3 + 0];
-        dr[i * 4 + 1] = diffuse[i * 3 + 1];
-        dr[i * 4 + 2] = diffuse[i * 3 + 2];
-        dr[i * 4 + 3] = roughness[i];
+        ar[i * 4 + 0] = albedo[i * 3 + 0];
+        ar[i * 4 + 1] = albedo[i * 3 + 1];
+        ar[i * 4 + 2] = albedo[i * 3 + 2];
+        ar[i * 4 + 3] = roughness[i];
     }
-    stbi_image_free(diffuse);
+    stbi_image_free(albedo);
     stbi_image_free(roughness);
-    stbi_write_png(outpath, diffuse_width, diffuse_height, 4, dr, diffuse_width * 4);
-    stbi_image_free(dr);
+    stbi_write_png(outpath, albedo_width, albedo_height, 4, ar, albedo_width * 4);
+    stbi_image_free(ar);
     return 0;
 }
 
-int convert_eno(const char *emission_path, const char *normal_path, const char *occlusion_path, const char *outpath)
+int convert_no(const char *normal_path, const char *occlusion_path, const char *outpath)
 {
-    int emission_width, emission_height, emission_channels;
-    unsigned char *emission = stbi_load(emission_path, &emission_width, &emission_height, &emission_channels, 0);
-
-    if (!emission)
-    {
-        printf("Error: Failed to load %s\n", emission_path);
-        return 1;
-    }
-    else if (emission_channels != 1)
-    {
-        printf("Error: %s needs to be a 1-channel grayscale image.\n", emission_path);
-        return 1;
-    }
-
     int normal_width, normal_height, normal_channels;
     unsigned char *normal = stbi_load(normal_path, &normal_width, &normal_height, &normal_channels, 0);
 
@@ -81,11 +67,6 @@ int convert_eno(const char *emission_path, const char *normal_path, const char *
     else if (normal_channels != 3)
     {
         printf("Error: %s needs to be a 3-channel RGB image.\n", normal_path);
-        return 1;
-    }
-    else if (emission_width != normal_width || emission_height != normal_height)
-    {
-        printf("Error: %s and %s need to have the same dimensions.\n", emission_path, normal_path);
         return 1;
     }
 
@@ -102,41 +83,118 @@ int convert_eno(const char *emission_path, const char *normal_path, const char *
         printf("Error: %s needs to be a 1-channel grayscale image.\n", occlusion_path);
         return 1;
     }
-    else if (emission_width != occlusion_width || emission_height != occlusion_height)
+    else if (normal_width != occlusion_width || normal_height != occlusion_height)
     {
-        printf("Error: %s and %s need to have the same dimensions.\n", emission_path, occlusion_path);
+        printf("Error: %s and %s need to have the same dimensions.\n", normal_path, occlusion_path);
         return 1;
     }
 
 
-    unsigned char *eno = (unsigned char *)calloc(emission_width * emission_height, 4);
-    for (int i = 0; i < emission_width * emission_height; i++)
+    unsigned char *eno = (unsigned char *)calloc(normal_width * normal_height, 4);
+    for (int i = 0; i < normal_width * normal_height; i++)
     {
-        eno[i * 4 + 0] = emission[i];
+        eno[i * 4 + 0] = 0;
         eno[i * 4 + 1] = normal[i * 3 + 0];
         eno[i * 4 + 2] = occlusion[i];
         eno[i * 4 + 3] = normal[i * 3 + 1];
     }
-    stbi_image_free(emission);
     stbi_image_free(normal);
     stbi_image_free(occlusion);
-    stbi_write_png(outpath, emission_width, emission_height, 4, eno, emission_width * 4);
+    stbi_write_png(outpath, normal_width, normal_height, 4, eno, normal_width * 4);
     stbi_image_free(eno);
     return 0;
 }
 
+int convert_mno(const char *metallic_path, const char *normal_path, const char *occlusion_path, const char *outpath)
+{
+    int metallic_width, metallic_height, metallic_channels;
+    unsigned char *metallic = stbi_load(metallic_path, &metallic_width, &metallic_height, &metallic_channels, 0);
+
+    if (!metallic)
+    {
+        printf("Error: Failed to load %s\n", metallic_path);
+        return 1;
+    }
+    else if (metallic_channels != 1)
+    {
+        printf("Error: %s needs to be a 1-channel grayscale image.\n", metallic_path);
+        return 1;
+    }
+
+    int normal_width, normal_height, normal_channels;
+    unsigned char *normal = stbi_load(normal_path, &normal_width, &normal_height, &normal_channels, 0);
+
+    if (!normal)
+    {
+        printf("Error: Failed to load %s\n", normal_path);
+        return 1;
+    }
+    else if (normal_channels != 3)
+    {
+        printf("Error: %s needs to be a 3-channel RGB image.\n", normal_path);
+        return 1;
+    }
+    else if (metallic_width != normal_width || metallic_height != normal_height)
+    {
+        printf("Error: %s and %s need to have the same dimensions.\n", metallic_path, normal_path);
+        return 1;
+    }
+
+    int occlusion_width, occlusion_height, occlusion_channels;
+    unsigned char *occlusion = stbi_load(occlusion_path, &occlusion_width, &occlusion_height, &occlusion_channels, 0);
+
+    if (!occlusion)
+    {
+        printf("Error: Failed to load %s\n", occlusion_path);
+        return 1;
+    }
+    else if (occlusion_channels != 1)
+    {
+        printf("Error: %s needs to be a 1-channel grayscale image.\n", occlusion_path);
+        return 1;
+    }
+    else if (metallic_width != occlusion_width || metallic_height != occlusion_height)
+    {
+        printf("Error: %s and %s need to have the same dimensions.\n", metallic_path, occlusion_path);
+        return 1;
+    }
+
+
+    unsigned char *eno = (unsigned char *)calloc(metallic_width * metallic_height, 4);
+    for (int i = 0; i < metallic_width * metallic_height; i++)
+    {
+        eno[i * 4 + 0] = metallic[i];
+        eno[i * 4 + 1] = normal[i * 3 + 0];
+        eno[i * 4 + 2] = occlusion[i];
+        eno[i * 4 + 3] = normal[i * 3 + 1];
+    }
+    stbi_image_free(metallic);
+    stbi_image_free(normal);
+    stbi_image_free(occlusion);
+    stbi_write_png(outpath, metallic_width, metallic_height, 4, eno, metallic_width * 4);
+    stbi_image_free(eno);
+    return 0;
+}
+
+
+
 int main(int argc, char *argv[])
 {
-    if (argc == 5 && memcmp(argv[1], "-dr", 3) == 0)
+    if (argc == 5 && memcmp(argv[1], "-ar", 3) == 0)
     {
-        return convert_dr(argv[2], argv[3], argv[4]);
+        return convert_ar(argv[2], argv[3], argv[4]);
+    }
+    else if (argc == 5 && memcmp(argv[1], "-no", 4) == 0)
+    {
+        return convert_no(argv[2], argv[3], argv[4]);
     }
     else if (argc == 6 && memcmp(argv[1], "-eno", 4) == 0)
     {
-        return convert_eno(argv[2], argv[3], argv[4], argv[5]);
+        return convert_mno(argv[2], argv[3], argv[4], argv[5]);
     }
     
-    printf("Usage: texture_packer -dr image_diffuse.png image_roughness.png image_dr.png\n");
-    printf("       texture_packer -eno image_emission.png image_normal.png image_occlusion.png image_eno.png\n");
+    printf("Usage: texture_packer -ar image_albedo.png image_roughness.png image_ar.png\n");
+    printf("       texture_packer -no image_normal.png image_occlusion.png image_no.png\n");
+    printf("       texture_packer -mno image_metallic.png image_normal.png image_occlusion.png image_mno.png\n");
     return 1;
 }

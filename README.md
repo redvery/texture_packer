@@ -3,10 +3,15 @@ Combines channels of 5 PNG images into 2
 
 #### Diffuse/Roughness Map
 ```
-texture_packer -dr image_diffuse.png image_roughness.png image_dr.png
+texture_packer -ar image_albedo.png image_roughness.png image_ar.png
 ```
 
-#### Emission/Normal/Occlusion Map
+#### Normal/Occlusion Map
 ```
-texture_packer -eno image_emission.png image_normal.png image_occlusion.png image_eno.png
+texture_packer -no image_normal.png image_occlusion.png image_no.png
+```
+
+#### Metallic/Normal/Occlusion Map
+```
+texture_packer -mno image_metallic.png image_normal.png image_occlusion.png image_mno.png
 ```
