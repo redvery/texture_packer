@@ -1,6 +1,6 @@
-bin/texture_packer: src/texture_packer.c | bin
-	@echo Compiling texture_packer.c...
-	@gcc -o $@ $< 
+bin/texpack: src/texpack.cpp | bin
+	@echo Compiling texpack.cpp...
+	@g++ -o $@ $< -Wc++11-extensions -std=c++20
 
 bin:
 	@echo Creating bin directory...
