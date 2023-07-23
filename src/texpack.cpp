@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                stbi_write_png("out.png", width, height, channels, out, width * channels);
+                stbi_write_png(argv[channels + 2], width, height, channels, out, width * channels);
                 stbi_image_free(out);
                 return 0;
             }
